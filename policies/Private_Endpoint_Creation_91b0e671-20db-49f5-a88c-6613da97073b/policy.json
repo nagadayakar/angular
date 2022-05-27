@@ -1,0 +1,104 @@
+{
+ "properties": {
+  "displayName": "Private Endpoint Creation",
+  "policyType": "Custom",
+  "mode": "Indexed",
+  "metadata": {
+   "category": "Storage",
+   "createdBy": "5ee231d3-7845-4f17-a6f6-e8d631f209fe",
+   "createdOn": "2022-03-28T14:56:47.4796693Z",
+   "updatedBy": null,
+   "updatedOn": null
+  },
+  "parameters": {
+   "privateDnsZoneId": {
+    "type": "String",
+    "metadata": {
+     "displayName": "privateDnsZoneId",
+     "strongType": "Microsoft.Network/privateDnsZones"
+    }
+   }
+  },
+  "policyRule": {
+   "if": {
+    "allOf": [
+     {
+      "field": "type",
+      "equals": "Microsoft.Network/privateEndpoints"
+     },
+     {
+      "count": {
+       "field": "Microsoft.Network/privateEndpoints/privateLinkServiceConnections[*].groupIds[*]",
+       "where": {
+        "field": "Microsoft.Network/privateEndpoints/privateLinkServiceConnections[*].groupIds[*]",
+        "equals": "blob"
+       }
+      },
+      "greaterOrEquals": 1
+     }
+    ]
+   },
+   "then": {
+    "effect": "deployIfNotExists",
+    "details": {
+     "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+     "roleDefinitionIds": [
+      "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+     ],
+     "deployment": {
+      "properties": {
+       "mode": "incremental",
+       "template": {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+         "privateDnsZoneId": {
+          "type": "string"
+         },
+         "privateEndpointName": {
+          "type": "string"
+         },
+         "location": {
+          "type": "string"
+         }
+        },
+        "resources": [
+         {
+          "name": "[concat(parameters('privateEndpointName'), '/deployedByPolicy')]",
+          "type": "Microsoft.Network/privateEndpoints/privateDnsZoneGroups",
+          "apiVersion": "2020-03-01",
+          "location": "[parameters('location')]",
+          "properties": {
+           "privateDnsZoneConfigs": [
+            {
+             "name": "storageBlob-privateDnsZone",
+             "properties": {
+              "privateDnsZoneId": "[parameters('privateDnsZoneId')]"
+             }
+            }
+           ]
+          }
+         }
+        ]
+       },
+       "parameters": {
+        "privateDnsZoneId": {
+         "value": "[parameters('privateDnsZoneId')]"
+        },
+        "privateEndpointName": {
+         "value": "[field('name')]"
+        },
+        "location": {
+         "value": "[field('location')]"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "id": "/providers/Microsoft.Management/managementGroups/DXCIT-Master/providers/Microsoft.Authorization/policyDefinitions/91b0e671-20db-49f5-a88c-6613da97073b",
+ "type": "Microsoft.Authorization/policyDefinitions",
+ "name": "91b0e671-20db-49f5-a88c-6613da97073b"
+}
